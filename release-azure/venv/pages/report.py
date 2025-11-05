@@ -4,6 +4,7 @@ import pandas as pd
 st.set_page_config(layout="wide")
 
 col1, col2, col3 = st.columns(3)
+col4, col5 = st.columns(2)
 
 with col1:
     version = st.text_input("Insira a versão da release: ")
@@ -20,8 +21,9 @@ with col3:
     stories = st.text_area("Insira o markdown das stories")
     bugs = st.text_area("Insira o markdown dos bugs")
 
-with st.expander("Test Plan"):
-    st.markdown(f'''
+with col4:
+    with st.expander("Test Plan"):
+        st.markdown(f'''
         Test Plan - Version {version} - Jabil - Tester Performance
         ========================================================================================================================================================================================================================================
 
@@ -149,9 +151,9 @@ with st.expander("Test Results"):
 
         ## Documentation:
         - [Exploratory Test Sprint {sprint} - Version {version}]({link_exploratorytest})]''')
-    
-with st.expander("Exploratory Test"):
-    st.markdown(f'''
+with col5:    
+    with st.expander("Exploratory Test"):
+        st.markdown(f'''
         Exploratory test
         # Exploratory Test - Version {version} - Jabil - Tester Performance
 
@@ -193,8 +195,8 @@ with st.expander("Exploratory Test"):
         [Version {version} - Overview](https://dev.azure.com/VNT-MAO-Jabil/Tester%20Performance/_wiki/wikis/Tester-Performance.wiki/1109/Version-2.5)
 ''')
     
-with st.expander("Test Report"):
-    st.markdown(f'''        
+    with st.expander("Test Report"):
+        st.markdown(f'''        
 
         # Test Report - Version {version} - Jabil - Tester Performance
 
