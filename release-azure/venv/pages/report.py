@@ -196,7 +196,7 @@ with col5:
 ''')
     
     with st.expander("Test Report"):
-        st.code(f'''        
+        st.write(f'''        
 
         # Test Report - Version {version} - Jabil - Tester Performance
 
