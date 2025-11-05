@@ -196,7 +196,7 @@ with col5:
 ''')
     
     with st.expander("Test Report"):
-        st.markdown(f'''        
+        st.code(f'''        
 
         # Test Report - Version {version} - Jabil - Tester Performance
 
