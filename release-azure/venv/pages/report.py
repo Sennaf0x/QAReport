@@ -128,8 +128,8 @@ with col4:
 
 
         ''')
-with st.expander("Test Results"):
-    st.markdown(f'''
+    with st.expander("Test Results"):
+        st.markdown(f'''
 
         # Test Results - Version {version} - Jabil - Tester Performance
 
