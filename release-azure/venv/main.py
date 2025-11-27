@@ -1,86 +1,157 @@
 import streamlit as st
+from datetime import datetime
 import pandas as pd
-import matplotlib.pyplot as plt
-import plotly.express as px
 
+# Função que gera markdown detalhado do dataframe Excel/CSV
+def gerar_markdown_relatorio_excel(df):
+    colunas_esperadas = ["User Story", "Executed", "Pass", "Fail", "Not Run", "Build", "Result", "Tester", "Comments"]
+    if not all(col in df.columns for col in colunas_esperadas):
+        st.error(f"O arquivo deve conter as colunas: {colunas_esperadas}")
+        return None
+
+    markdown = (
+        "| **User Story** | Executed | Pass | Fail | Not Run | Build | Result | Tester | Comments |\n"
+        "|----------------|:----:|:----:|:----:|:--:|:-----:|:-------:|---------|----------|\n"
+    )
+    for _, row in df.iterrows():
+        user_story = str(row["User Story"]).replace("|", r"\|")
+        executed = int(row["Executed"])
+        passed = int(row["Pass"])
+        failed = int(row["Fail"])
+        not_run = int(row["Not Run"])
+        build = row["Build"]
+        result = row["Result"]
+        tester = row["Tester"]
+        comments = row["Comments"] if pd.notna(row["Comments"]) else "-"
+
+        markdown += f"| {user_story} | {executed} | {passed} | {failed} | {not_run} | {build} | {result} | {tester} | {comments} |\n"
+    return markdown
+
+# Configurar a página para usar layout widescreen
 st.set_page_config(layout="wide")
 
-# Cria um cabeçalho para o aplicativo
-st.title("Análise de Estórias")
+st.title("Sprint Tests Report")
 
-# Cria um componente de upload de arquivo
-uploaded_file = st.file_uploader("Escolha um arquivo Excel", type=["xlsx"])
+col1, col2 = st.columns(2)
 
-col1, col2, col3 = st.columns(3)
-col4, col5, col6 = st.columns(3)
+test_types = [
+    "Business rule",
+    "Layout / UI",
+    "Verification",
+    "Exploratory",
+    "Regression",
+    "Automated",
+    "Performance",
+]
 
-if uploaded_file is not None:
-    # Lê o arquivo Excel
-    df = pd.read_excel(uploaded_file)
+with st.form("report_form"):
+        with col1:
+            version = st.text_input("Version", "3.1")
+            sprint = st.text_input("Sprint", "Sprint 36")
+            report_date = st.date_input("Report Date", datetime.strptime("11/04/2025", "%m/%d/%Y"))
+            environment = st.selectbox("Environment", ["QA", "Production", "Staging"], index=0)
+            sprint_window = st.text_input("Sprint Window", "10/29/25 → 11/04/25")
+            status = st.selectbox(
+                "Status",
+                options=["Success", "Fail", "Not Run"],
+                format_func=lambda x: {
+                    "Success": "🟢 Success",
+                    "Fail": "🔴 Fail",
+                    "Not Run": "⚪ Not Run",
+                }[x],
+                index=0,
+            )
 
-    # Mostra as primeiras 10 linhas do dataframe
-    with st.expander("Mostrar dados da tabela"):
-        st.write(df.head(10))
-        
-    # Divide o título em 'Epic' e 'Screen'
-    df['Epic'] = df['Title'].apply(lambda x: x.split('|')[0].strip() if isinstance(x, str) and '|' in x else 'Other')
-    df['Screen'] = df['Title'].apply(lambda x: x.split('|')[1].strip() if isinstance(x, str) and '|' in x and len(x.split('|')) > 1 else 'Other')
-    
-    # Contabiliza o número de bugs
-    bug_count = df[df['Title'].str.contains(r'\[Bug\]', na=False)].shape[0]
-    # Contabiliza o número de estórias entregues dentro da sprint ('Done')
-    status_counts = df['State'].value_counts()
-    delivered_count = status_counts.get('Done', 0)
-    # Contabiliza o número de estórias não entregues dentro da sprint ('Done')
-    non_delivered_statuses = status_counts.drop(labels='Done', errors='ignore')
-    non_delivered_count = non_delivered_statuses.sum()
-    
-    with col1:
-        #Mostra o card de estórias entregues
-        st.subheader("Estórias entregues dentro da sprint")
-        st.metric(label="Total de Entregues", value=delivered_count, border=True)
-    
-    with col2:
-        #Mostra o card de estórias bugs
-        st.subheader("Bugs criados")
-        st.metric(label="Total de Bugs", value=bug_count, border=True)
-    with col3:
-        #Mostra o card de estórias bugs
-        st.subheader("Estórias não entregues")
-        st.metric(label="Total de não entregues", value=non_delivered_count, border=True)
+        with col2:
+            project = st.text_input("Project", "Tester Performance")
+            analyst = st.text_input("Analyst", "Paulo Senna Taylor Bittencourt")
+            release_notes = st.text_input(
+                "Release Notes",
+                "https://dev.azure.com/VNT-MAO-Jabil/Tester%20Performance/_wiki/wikis/Tester-Performance.wiki/1282/Version-3.16",
+            )
+            acceptance_criteria = st.text_input(
+                "Acceptance Criteria",
+                "https://dev.azure.com/VNT-MAO-Jabil/Tester%20Performance/_wiki/wikis/Tester-Performance.wiki/1107/Version-2.9.0",
+            )
+            selected_tests = st.multiselect(
+                "Select test types executed (checked = True)",
+                options=test_types,
+                default=[
+                    "Business rule",
+                    "Layout / UI",
+                    "Verification",
+                    "Exploratory",
+                    "Regression",
+                ],
+            )
 
-    
-    with col4:
-        # Contabiliza o número de estórias em cada status
-        st.subheader("Número de estórias em cada status como card")
-        st.bar_chart(status_counts)
+            uploaded_file = st.file_uploader(
+                "Upload Excel ou CSV dos casos de teste",
+                type=['xlsx', 'xls', 'csv']
+            )
 
-    with col5:
-        # Contabiliza o número de estórias por Epic
-        epic_counts = df['Epic'].value_counts().reset_index()
-        epic_counts.columns = ['Epic', 'Contagem']
-        # Exibe o gráfico de barras para a distribuição de Epics
-        st.subheader("Distribuição de Estórias por Epic")
-        st.bar_chart(epic_counts.set_index('Epic'))
+            df_uploaded = None
+            if uploaded_file is not None:
+                try:
+                    if uploaded_file.name.endswith(('xls', 'xlsx')):
+                        df_uploaded = pd.read_excel(uploaded_file)
+                    else:
+                        df_uploaded = pd.read_csv(uploaded_file)
 
-    with col6:
-        # Contabiliza o número de estórias por Tela (Screen)
-        screen_counts = df['Screen'].value_counts()
-        #screen_counts.columns = ['Screen', 'Contagem']
+                    st.write("Preview of uploaded file:")
+                    st.dataframe(df_uploaded)
+                except Exception as e:
+                    st.error(f"Erro ao ler o arquivo: {e}")
 
-        # Exibe o gráfico de barras para a distribuição por Telas
-        #st.subheader("Distribuição de Estórias por Tela")
-        #st.bar_chart(screen_counts.set_index('Screen'))
-        # Contabiliza o número de estórias por Tela (Screen)
+        submitted = st.form_submit_button("Submit")
 
-        # Exibe o gráfico de pizza para a distribuição por Telas
-        #st.subheader("Distribuição de Estórias por Tela")
-        #fig, ax = plt.subplots(figsize=(8,8))
-        #ax.pie(screen_counts.values, labels=screen_counts.index, autopct='%1.1f%%', startangle=140)
-        #ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
-        #st.pyplot(fig)
-    
-        # Exibe o gráfico de pizza para a distribuição por Telas com plotly
-        st.subheader("Distribuição de Estórias por Tela")
-        fig = px.pie(screen_counts, values=screen_counts.values, names=screen_counts.index, title='Distribuição de Estórias por Tela')
-        st.plotly_chart(fig)    
+if submitted:
+    tests = {test: (test in selected_tests) for test in test_types}
+    status_emoji = {"Success": "🟢", "Fail": "🔴", "Not Run": "⚪"}[status]
+
+    markdown_report = f"""# Sprint Tests Report — Version {version} ({sprint})
+
+**Report Date:** {report_date.strftime('%m/%d/%Y')}  
+**Environment:** {environment}  
+**Sprint Window:** {sprint_window}  
+**Status:** {status_emoji} {status}
+
+---
+
+## 1. Overview
+
+| **Project**   | {project}                                   |
+|--------------|---------------------------------------------|
+| **Analyst**   | {analyst}                                   |
+| **Release Notes**       | [{sprint}]({release_notes})                   |
+| **Acceptance Criteria** | [Test Plan Report]({acceptance_criteria})    |
+
+### 1.1. 🔎 Summary Result
+
+All tests executed **with success**, except the story *1292881 — GR&R | Label Update for Missing Requirements Button*, which was moved to the next sprint.
+
+---
+
+## 2. Test Coverage
+
+### 2.1 Types of Tests Executed
+"""
+
+    for test_name, executed in tests.items():
+        checkbox = "☑️" if executed else "⬜"
+        markdown_report += f"- [{checkbox}] {test_name}\n"
+
+    markdown_report += """
+🟢 **Pass** — Test case executed and passed  
+🔴 **Fail** — Test case executed and failed  
+⚪ **Not Run** — Test case not executed during this sprint
+"""
+
+    if df_uploaded is not None:
+        markdown_detalhado = gerar_markdown_relatorio_excel(df_uploaded)
+        if markdown_detalhado is not None:
+            markdown_report += "\n---\n\n### 2.3 Detailed Test Cases\n\n"
+            markdown_report += markdown_detalhado
+
+
+    st.markdown(markdown_report)
