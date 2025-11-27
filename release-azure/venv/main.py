@@ -27,12 +27,38 @@ def gerar_markdown_relatorio_excel(df):
         markdown += f"| {user_story} | {executed} | {passed} | {failed} | {not_run} | {build} | {result} | {tester} | {comments} |\n"
     return markdown
 
+def gerar_sumario_execucao(df):
+    """
+    A partir de um dataframe no formato esperado, calcula o sumário de execução
+    dos testes e retorna uma string em markdown com a tabela de resumo.
+    """
+    colunas_esperadas = ["Executed", "Pass", "Fail", "Not Run"]
+    if not all(col in df.columns for col in colunas_esperadas):
+        raise ValueError(f"O DataFrame deve conter as colunas: {colunas_esperadas}")
+
+    total_test_cases = len(df)
+    total_executed = df["Executed"].sum()
+    total_passed = df["Pass"].sum()
+    total_failed = df["Fail"].sum()
+    total_not_run = df["Not Run"].sum()
+
+    markdown_summary = "### 2.2 Execution Summary\n"
+    markdown_summary += "| **Metric**         | **Value** |\n"
+    markdown_summary += "|--------------------|-----------|\n"
+    markdown_summary += f"| Total Test Cases   | **{total_test_cases}** |\n"
+    markdown_summary += f"| Executed           | **{total_executed}** |\n"
+    markdown_summary += f"| Passed             | **{total_passed}** |\n"
+    markdown_summary += f"| Failed             | **{total_failed}** |\n"
+    markdown_summary += f"| Not Run            | **{total_not_run}** |\n"
+
+    return markdown_summary
+
 # Configurar a página para usar layout widescreen
 st.set_page_config(layout="wide")
 
 st.title("Sprint Tests Report")
 
-col1, col2 = st.columns(2)
+col1, col2, col3 = st.columns(3)
 
 test_types = [
     "Business rule",
@@ -51,6 +77,8 @@ with st.form("report_form"):
             report_date = st.date_input("Report Date", datetime.strptime("11/04/2025", "%m/%d/%Y"))
             environment = st.selectbox("Environment", ["QA", "Production", "Staging"], index=0)
             sprint_window = st.text_input("Sprint Window", "10/29/25 → 11/04/25")
+
+        with col2:
             status = st.selectbox(
                 "Status",
                 options=["Success", "Fail", "Not Run"],
@@ -61,8 +89,6 @@ with st.form("report_form"):
                 }[x],
                 index=0,
             )
-
-        with col2:
             project = st.text_input("Project", "Tester Performance")
             analyst = st.text_input("Analyst", "Paulo Senna Taylor Bittencourt")
             release_notes = st.text_input(
@@ -73,6 +99,7 @@ with st.form("report_form"):
                 "Acceptance Criteria",
                 "https://dev.azure.com/VNT-MAO-Jabil/Tester%20Performance/_wiki/wikis/Tester-Performance.wiki/1107/Version-2.9.0",
             )
+        with col3:    
             selected_tests = st.multiselect(
                 "Select test types executed (checked = True)",
                 options=test_types,
@@ -147,7 +174,10 @@ All tests executed **with success**, except the story *1292881 — GR&R | Label 
 ⚪ **Not Run** — Test case not executed during this sprint
 """
 
+    # ... aqui pode adicionar o markdown detalhado como já faz no seu código ...
     if df_uploaded is not None:
+        markdown_sumario = gerar_sumario_execucao(df_uploaded)
+        st.markdown(markdown_sumario)
         markdown_detalhado = gerar_markdown_relatorio_excel(df_uploaded)
         if markdown_detalhado is not None:
             markdown_report += "\n---\n\n### 2.3 Detailed Test Cases\n\n"
