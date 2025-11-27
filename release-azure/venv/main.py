@@ -36,11 +36,11 @@ def gerar_sumario_execucao(df):
     if not all(col in df.columns for col in colunas_esperadas):
         raise ValueError(f"O DataFrame deve conter as colunas: {colunas_esperadas}")
 
-    total_test_cases = len(df)
     total_executed = df["Executed"].sum()
     total_passed = df["Pass"].sum()
     total_failed = df["Fail"].sum()
     total_not_run = df["Not Run"].sum()
+    total_test_cases = total_passed + total_failed + total_not_run
 
     markdown_summary = "### 2.2 Execution Summary\n"
     markdown_summary += "| **Metric**         | **Value** |\n"
@@ -168,20 +168,20 @@ All tests executed **with success**, except the story *1292881 — GR&R | Label 
         checkbox = "☑️" if executed else "⬜"
         markdown_report += f"- [{checkbox}] {test_name}\n"
 
-    markdown_report += """
+
+# ... aqui pode adicionar o markdown detalhado como já faz no seu código ...
+if df_uploaded is not None:
+    markdown_sumario = gerar_sumario_execucao(df_uploaded)
+    markdown_report += markdown_sumario
+    
+    markdown_detalhado = gerar_markdown_relatorio_excel(df_uploaded)
+    markdown_report += "\n---\n\n### 2.3 Detailed Test Cases\n\n"
+    markdown_report += markdown_detalhado
+
+
+markdown_report += """
 🟢 **Pass** — Test case executed and passed  
 🔴 **Fail** — Test case executed and failed  
 ⚪ **Not Run** — Test case not executed during this sprint
 """
-
-    # ... aqui pode adicionar o markdown detalhado como já faz no seu código ...
-    if df_uploaded is not None:
-        markdown_sumario = gerar_sumario_execucao(df_uploaded)
-        st.markdown(markdown_sumario)
-        markdown_detalhado = gerar_markdown_relatorio_excel(df_uploaded)
-        if markdown_detalhado is not None:
-            markdown_report += "\n---\n\n### 2.3 Detailed Test Cases\n\n"
-            markdown_report += markdown_detalhado
-
-
-    st.markdown(markdown_report)
+st.markdown(markdown_report)
