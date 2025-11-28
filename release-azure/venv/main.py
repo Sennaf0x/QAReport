@@ -160,7 +160,7 @@ if submitted:
 
 ### 1.1. 🔎 Summary Result
 
-All tests executed **with success**, except the story *1292881 — GR&R | Label Update for Missing Requirements Button*, which was moved to the next sprint.
+{text_summary}
 
 ---
 
