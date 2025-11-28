@@ -2,6 +2,9 @@ import streamlit as st
 from datetime import datetime
 import pandas as pd
 
+
+markdown_report = ""
+
 # Função que gera markdown detalhado do dataframe Excel/CSV
 def gerar_markdown_relatorio_excel(df):
     colunas_esperadas = ["User Story", "Executed", "Pass", "Fail", "Not Run", "Build", "Result", "Tester", "Comments"]
@@ -36,10 +39,10 @@ def gerar_sumario_execucao(df):
     if not all(col in df.columns for col in colunas_esperadas):
         raise ValueError(f"O DataFrame deve conter as colunas: {colunas_esperadas}")
 
-    total_executed = df["Executed"].sum()
     total_passed = df["Pass"].sum()
     total_failed = df["Fail"].sum()
     total_not_run = df["Not Run"].sum()
+    total_executed = total_passed + total_failed - total_not_run
     total_test_cases = total_passed + total_failed + total_not_run
 
     markdown_summary = "### 2.2 Execution Summary\n"
@@ -112,6 +115,8 @@ with st.form("report_form"):
                 ],
             )
 
+            text_summary = st.text_area("Summary","All tests executed **with success**, except the story *1292881 — GR&R | Label Update for Missing Requirements Button*, which was moved to the next sprint.")
+
             uploaded_file = st.file_uploader(
                 "Upload Excel ou CSV dos casos de teste",
                 type=['xlsx', 'xls', 'csv']
@@ -166,7 +171,7 @@ All tests executed **with success**, except the story *1292881 — GR&R | Label 
 
     for test_name, executed in tests.items():
         checkbox = "☑️" if executed else "⬜"
-        markdown_report += f"- [{checkbox}] {test_name}\n"
+        markdown_report += f"- {checkbox} {test_name}\n"
 
 
 # ... aqui pode adicionar o markdown detalhado como já faz no seu código ...
@@ -184,4 +189,5 @@ markdown_report += """
 🔴 **Fail** — Test case executed and failed  
 ⚪ **Not Run** — Test case not executed during this sprint
 """
+
 st.markdown(markdown_report)
