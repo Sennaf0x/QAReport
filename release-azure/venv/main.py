@@ -42,7 +42,7 @@ def gerar_sumario_execucao(df):
     total_passed = df["Pass"].sum()
     total_failed = df["Fail"].sum()
     total_not_run = df["Not Run"].sum()
-    total_executed = total_passed + total_failed - total_not_run
+    total_executed = total_passed + total_failed
     total_test_cases = total_passed + total_failed + total_not_run
 
     markdown_summary = "### 2.2 Execution Summary\n"
