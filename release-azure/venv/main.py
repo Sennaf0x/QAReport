@@ -184,10 +184,10 @@ if df_uploaded is not None:
     markdown_report += markdown_detalhado
 
 
-markdown_report += """
-🟢 **Pass** — Test case executed and passed  
-🔴 **Fail** — Test case executed and failed  
-⚪ **Not Run** — Test case not executed during this sprint
-"""
+    markdown_report += """
+    🟢 **Pass** — Test case executed and passed  
+    🔴 **Fail** — Test case executed and failed  
+    ⚪ **Not Run** — Test case not executed during this sprint
+    """
 
 st.markdown(markdown_report)
